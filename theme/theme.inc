@@ -211,7 +211,7 @@ function _field_collection_table_hide_empty(&$variables) {
  * Derivative of theme_table() solely for the HOOK_preprocess_table__PATTERN().
  */
 function theme_table__field_collection_table($variables) {
-  return theme_table($variables);
+  return theme('table', $variables);
 }
 
 /**
