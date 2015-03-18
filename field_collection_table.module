@@ -197,6 +197,7 @@ function field_collection_table_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form[$field_name]) && $instance['widget']['type'] == 'field_collection_table') {
         $language = $form[$field_name]['#language'];
         $form[$field_name][$language]['#theme'] = 'field_collection_table_multiple_value_fields';
+        $form[$field_name][$language]['#custom_settings'] = $instance['widget']['settings'];
         $form[$field_name][$language]['#pre_render'][] = 'field_collection_table_pre_render_multiple_fields';
       }
     }
@@ -288,6 +289,9 @@ function field_collection_table_field_widget_info() {
     'field_collection_table' => array(
       'label' => t('Table'),
       'field types' => array('field_collection'),
+      'settings' => array(
+        'nodragging' => FALSE,
+      ),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_DEFAULT,
         'default value' => FIELD_BEHAVIOR_NONE,
@@ -307,4 +311,23 @@ function field_collection_table_field_widget_form(&$form, &$form_state, $field, 
       break;
   }
   return $element;
+}
+
+/**
+ * Implements hook_field_widget_settings_form().
+ */
+function field_collection_table_field_widget_settings_form($field, $instance) {
+  $widget = $instance['widget'];
+  $settings = $widget['settings'];
+
+  if ($widget['type'] == 'field_collection_table') {
+    $form['nodragging'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Disable drag and drop'),
+      '#description' => t('If checked, users cannot rearrange the rows.'),
+      '#default_value' => $settings['nodragging'],
+    );
+  }
+
+  return $form;
 }
