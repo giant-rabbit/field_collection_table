@@ -31,18 +31,28 @@ function field_collection_table_field_formatter_info() {
 function field_collection_table_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
   $settings = $display['settings'];
+  $view_mode = !empty( $display['settings']['view_mode'] ) ? $display['settings']['view_mode'] : 'default';
 
   switch ($display['type']) {
     case 'field_collection_table_view':
       $header = array();
       $field_names = array();
       foreach (field_info_instances('field_collection_item', $field['field_name']) as $field_collection_item) {
-        $weight = $field_collection_item['display']['default']['weight'];
-        $field_names[$weight] = $field_collection_item['field_name'];
-        $header[$weight] = array(
-          'data' => $field_collection_item['label'],
-          'class' => $field_names[$weight],
-        );
+        $item_view_mode = !empty($field_collection_item['display'][$view_mode]) ? $view_mode : 'default';
+        if ($field_collection_item['display'][$item_view_mode]['type'] != 'hidden') {
+          $weight = $field_collection_item['display'][$item_view_mode]['weight'];
+          $field_names[$weight] = $field_collection_item['field_name'];
+
+          if ($field_collection_item['display'][$item_view_mode]['label'] != 'hidden') {
+            $header[$weight] = array(
+              'data' => $field_collection_item['label'],
+              'class' => $field_names[$weight],
+            );
+          }
+          else {
+            $header[$weight] = '';
+          }
+        }
       }
       ksort($header);
       ksort($field_names);
@@ -53,7 +63,7 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
         if (empty($field_collection)) {
           continue;
         }
-        $view = $field_collection->view();
+        $view = $field_collection->view($view_mode);
         $content = $view['field_collection_item'][$field_collection->identifier()];
         $column = array();
         foreach ($field_names as $field_name) {
@@ -104,6 +114,11 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
           'data' => $column,
           'class' => array('field_collection_item'),
         );
+      }
+
+      // remove header if all labels are hidden
+      if (!array_filter($header)) {
+        $header = array();
       }
 
       $element[0] = array(
