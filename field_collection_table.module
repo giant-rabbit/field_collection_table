@@ -288,7 +288,7 @@ function field_collection_table_field_widget_info() {
       'field types' => array('field_collection'),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-        'default value' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_NONE,
       ),
     ),
   );
