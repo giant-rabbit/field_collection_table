@@ -229,7 +229,9 @@ function field_collection_table_pre_render_field($element) {
       $field['#title_display'] = 'invisible';
       $field[$language]['#title_display'] = 'invisible';
       foreach (element_children($field[$language]) as $child) {
-        $field[$language][$child]['#title_display'] = 'invisible';
+        if (array_key_exists('#type', $field[$language][$child]) && !in_array($field[$language][$child]['#type'], array('radio', 'checkbox'))) {
+           $field[$language][$child]['#title_display'] = 'invisible';
+        }
         // Check the individual columns. Most commonly 'value'.
         foreach ($field_info['columns'] as $column => $column_info) {
           $field[$language][$child][$column]['#title_display'] = 'invisible';
