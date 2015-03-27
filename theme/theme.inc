@@ -63,8 +63,10 @@ function theme_field_collection_table_multiple_value_fields($variables) {
     // preview or failed validation)
     $items = array();
     foreach (element_children($element) as $key) {
-      if ($key === 'add_more') {
-        $add_more_button = &$element[$key];
+      if (!isset($element[$key]['#entity_type'])) {
+        if ($key === 'add_more') {
+          $add_more_button = &$element[$key];
+        }
       }
       else {
         $items[] = &$element[$key];
