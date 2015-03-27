@@ -43,7 +43,10 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
 
           if ($field_collection_item['display'][$item_view_mode]['label'] != 'hidden') {
             $header[$weight] = array(
-              'data' => $field_collection_item['label'],
+              'data' => (
+                module_exists('i18n_field'))
+                ? i18n_field_translate_property($field_collection_item, 'label')
+                : $field_collection_item['label'],
               'class' => $field_names[$weight],
             );
           }
