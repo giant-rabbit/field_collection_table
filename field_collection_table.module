@@ -19,6 +19,8 @@ function field_collection_table_field_formatter_info() {
         'description' => TRUE,
         'view_mode' => 'full',
         'empty' => TRUE,
+        'cssrowcol' => FALSE,
+        'cssfield' => FALSE,
       ),
     ), );
 }
@@ -128,6 +130,12 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
         $element[0]['#theme'] = 'table__field_collection_table';
         $element[0]['#settings']['empty'] = TRUE;
       }
+      if (!empty($settings['cssrowcol'])) {
+        $element[0]['settings']['cssrowcol'] = TRUE;
+      }
+      if (!empty($settings['cssfield'])) {
+        $element[0]['settings']['cssfield'] = TRUE;
+      }
       break;
   }
 
@@ -151,6 +159,27 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
       '#description' => t('If checked, hide empty Field Collection table columns.'),
       '#default_value' => $settings['empty'],
     );
+
+    /*
+     * add css row and column selectors to table cells
+     * MN
+     */
+    $element['cssrowcol'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Add css class selector for rows and columns'),
+      '#description' => t('If checked, it will add to each table cell the following selectors: row-x cell-y, where x is the row number and y is the column number'),
+      '#default_value' => $settings['cssrowcol'],
+    );
+    /*
+     * add css field selectors to table cells
+     * MN
+     */
+    $element['cssfield'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Add css class selector by field'),
+      '#description' => t('If checked, it will add to each table cell a class selectorsbased on the field name'),
+      '#default_value' => $settings['cssfield'],
+    );
   }
   return $element;
 }
@@ -165,6 +194,18 @@ function field_collection_table_field_formatter_settings_summary($field, $instan
   if ($display['type'] == 'field_collection_table_view') {
     $output .= '<br>';
     $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
+    /*
+     * show if css rows and columns selectors to table cells
+     * MN
+     */
+    $output .= '<br>';
+    $output .= (!empty($settings['cssrowcol']) ? t('Add') : t('No')) . ' ' .t('css class selectors for rows and columns');
+    /*
+     * show if css field selectors to table cells
+     * MN
+     */
+    $output .= '<br>';
+    $output .= (!empty($settings['cssfield']) ? t('Add') : t('No')) . ' ' .t('css class field selectors');
   }
   return $output;
 }
@@ -279,6 +320,22 @@ function field_collection_table_pre_render_multiple_fields($element) {
     // Skip the 'add_more' element.
     if (is_numeric($key)) {
       $element[$key] = field_collection_table_pre_render_field($element[$key]);
+      /*
+       * MN
+       * we transfer the field instance structure from the field children to the main field
+       * we needed it in the main field collection, so we can insert raw, column and field css class
+       * if requested in the settings
+       * while we go through the element's children, we remove such structure from them
+       * just to save space
+       */
+      if (isset($element[$key]) && isset($element[$key]['#instance'])) {
+        // transfer instance if we have not already done
+        if ( !isset($element['#instance']) ) {
+          $element['#instance'] = $element[$key]['#instance'];
+        }
+        // remove the key from the array and save space
+        unset($element[$key]['#instance']);
+      }
     }
   }
   return $element;
@@ -322,6 +379,13 @@ function field_collection_table_field_widget_form(&$form, &$form_state, $field, 
     case 'field_collection_table' :
       $instance['widget']['type'] = 'field_collection_embed';
       $element = field_collection_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
+      /*
+       * MN
+       * add to element structure the field instance where are stored the field settings for adding row and column and field name css classes
+       */
+      if ( $element ) {
+        $element['#instance'] = $instance;
+      }
       break;
   }
   return $element;
