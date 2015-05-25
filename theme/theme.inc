@@ -88,12 +88,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
 
       // check if we need to add css classes for rows and columns
       $classes = array('field-label');
-      if ($settings['cssrowcol']) {
+      if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
         // add css classes to field label tat is in the first column of the header
         $classes = array_merge($classes,array('h1','c1','h1-c1'));
       }
       // check if we need to add css field classes
-      if ($settings['cssfield']) {
+      if (isset($settings['cssfield']) && $settings['cssfield']) {
         // add css classes to field label tat is in the first column of the header
         $classes = array_merge($classes,array('label_'.$element['#field_name']));
       }
@@ -120,12 +120,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       if (!$element['#custom_settings']['nodragging']) {
         // insert css class identifiers if needed
         $classes = array('field-multiple-drag','field_body');
-        if ($settings['cssrowcol']) {
+        if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
           // add css classes to field label that is in the first column of the header
           $classes = array_merge($classes,array('r'.$rown,'c1','r'.$rown.'-c1'));
         }
         // check if we need to add css field classes
-        if ($settings['cssfield']) {
+        if (isset($settings['cssfield']) && $settings['cssfield']) {
           // add css classes to field label tat is in the first column of the header
           $classes = array_merge($classes,array('drag_r'.$rown.'_'.$element['#field_name'],'td_drag','drag_'.$element['#field_name']));
         }
@@ -145,12 +145,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
           if ($key == 0) {
             // check if we need to add css classes for rows and columns
             $classes = array('field-label');
-            if ($settings['cssrowcol']) {
+            if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
               // add css classes to field label tat is in the first column of the header
               $classes = array_merge($classes,array('h1','c'.$coln,'h1-c'.$coln));
             }
             // check if we need to add css field classes
-            if ($settings['cssfield']) {
+            if (isset($settings['cssfield']) && $settings['cssfield']) {
               // add css classes to field label tat is in the first column of the header
               $classes = array_merge($classes,array('h1_'.$field_name,'th_'.$field_name));
             }
@@ -161,12 +161,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
           }
           // check if we need to add css classes for rows and columns
           $classes = array('field-body');
-          if ($settings['cssrowcol']) {
+          if (isset($settings['cssrowcol']) && $settings['cssrowcol']) {
             // add css classes to field label tat is in the first column of the header
             $classes = array_merge($classes,array('r'.$rown,'c'.$coln,'r'.$rown.'-c'.$coln));
           }
           // check if we need to add css field classes
-          if ($settings['cssfield']) {
+          if (isset($settings['cssfield']) && $settings['cssfield']) {
             // add css classes to field label tat is in the first column of the header
             $classes = array_merge($classes,array('r'.$rown.'_'.$field_name,'td_'.$field_name));
           }
