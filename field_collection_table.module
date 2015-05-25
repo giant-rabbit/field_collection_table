@@ -264,7 +264,7 @@ function field_collection_table_field_attach_form($entity_type, $entity, &$form,
  * Callback for #pre_render for a single row, hide the titles for each field.
  */
 function field_collection_table_pre_render_field($element) {
-  if (isset($form['#entity_type']) && isset($form['#bundle'])) {
+  if (isset($element['#entity_type']) && isset($element['#bundle'])) {
     foreach (field_info_instances($element['#entity_type'], $element['#bundle']) as $field_name => $instance) {
       if (empty($element[$field_name])) {
         continue;
