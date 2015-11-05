@@ -247,6 +247,21 @@ function field_collection_table_field_attach_form($entity_type, $entity, &$form,
       $form[$field_name][$language]['#custom_settings'] = $instance['widget']['settings'];
       $form[$field_name][$language]['#pre_render'][] = 'field_collection_table_pre_render_multiple_fields';
     }
+    $field = field_info_field($field_name);
+    if ($field['type'] == 'field_collection'
+      && $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED
+      && empty($form_state['programmed'])
+      && field_access('edit', $field, $entity_type)
+      && $instance['widget']['type'] == 'field_collection_table') {
+
+      $element_langcode = $form[$field_name]['#language'];
+      $element_wrapper = $form[$field_name][$element_langcode]['add_more']['#ajax']['wrapper'];
+      for ($i = 0; $i <= $form[$field_name][$element_langcode]['#max_delta']; $i++) {
+        if (isset($form[$field_name][$element_langcode][$i]['remove_button'])) {
+          $form[$field_name][$element_langcode][$i]['remove_button']['#ajax']['wrapper'] = $element_wrapper;
+        }
+      }
+    }
   }
 
   // Individual field collection item edit.
