@@ -208,6 +208,18 @@ function field_collection_table_field_attach_form($entity_type, $entity, &$form,
       $form[$field_name][$language]['#pre_render'][] = 'field_collection_table_pre_render_multiple_fields';
     }
     $field = field_info_field($field_name);
+
+    if ($field['type'] == 'field_collection'
+      && field_collection_hide_blank_items($field)
+      && field_access('edit', $field, $entity_type)
+      && $instance['widget']['type'] == 'field_collection_table'
+    ) {
+      $element_langcode = $form[$field_name]['#language'];
+      if ($form[$field_name][$element_langcode]['#max_delta'] > 0) {
+        $form[$field_name][$element_langcode]['#max_delta']--;
+      }
+    }
+
     if ($field['type'] == 'field_collection'
       && $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED
       && empty($form_state['programmed'])
