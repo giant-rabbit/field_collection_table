@@ -72,11 +72,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
         $items[] = &$element[$key];
       }
     }
-    usort($items, '_field_sort_items_value_helper');
 
-
-    // Add header for table dragging.
+    // No need to sort if nodragging is selected.
     if (!$element['#custom_settings']['nodragging']) {
+      usort($items, '_field_sort_items_value_helper');
+
+      // Add header for table dragging.
       $header = array(
         array(
           'data' => '',
