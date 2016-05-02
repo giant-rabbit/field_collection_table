@@ -52,6 +52,14 @@ function theme_field_collection_table_multiple_value_fields($variables) {
   $element = $variables['element'];
   $output = '';
 
+  // Ensure default widget settings turn dragging off for field formatter
+  // without custom settings.
+  if (!isset($element['#custom_settings'])) {
+    $element['#custom_settings'] = array(
+      'nodragging' => TRUE,
+    );
+  }
+
   if (isset($element['#cardinality']) && ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
     $table_id = drupal_html_id($element['#field_name'] . '_values');
     $order_class = $element['#field_name'] . '-delta-order';
