@@ -85,7 +85,7 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
         $links = array(
           '#theme' => 'links',
           '#theme_wrapper' => 'item_list',
-          '#attributes' => array('class' => ['field-collection-view-links']),
+          '#attributes' => array('class' => array('field-collection-view-links')),
         );
 
         foreach (array('edit', 'delete') as $op) {
