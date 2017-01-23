@@ -16,8 +16,10 @@ function theme_field_collection_table_multiple_value_field($variables) {
       continue;
     }
 
-    $header[] = _field_collection_table_get_title($element[$field_name]);
-    $cells[] = array('data' => $element[$field_name]);
+    if (!isset($item[$field_name]['#access']) || $item[$field_name]['#access']) {
+      $header[] = _field_collection_table_get_title($element[$field_name]);
+      $cells[] = array('data' => $element[$field_name]);
+    }
 
     // Remove the original field to prevent duplicate printing.
     unset($element[$field_name]);
@@ -111,17 +113,19 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       foreach (element_children($item) as $field_name) {
         // Don't add the _weight.
         if (!$element['#custom_settings']['nodragging'] || $field_name != '_weight') {
-          // Only add the header once.
-          if ($key == 0) {
-            $header[] = array(
-              'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
-              'class' => array('field-label'),
+          if (!isset($item[$field_name]['#access']) || $item[$field_name]['#access']) {
+            // Only add the header once.
+            if ($key == 0) {
+              $header[] = array(
+                'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
+                'class' => array('field-label'),
+              );
+            }
+            $cells[] = array(
+              'data' => $item[$field_name],
+              'class' => drupal_html_class($field_name),
             );
           }
-          $cells[] = array(
-            'data' => $item[$field_name],
-            'class' => drupal_html_class($field_name),
-          );
         }
       }
       // Mark rows as draggable if needed.
