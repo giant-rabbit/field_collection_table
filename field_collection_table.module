@@ -18,6 +18,7 @@ function field_collection_table_field_formatter_info() {
         'add' => t('Add'),
         'description' => TRUE,
         'view_mode' => 'full',
+        'hide_empty' => FALSE,
         'empty' => TRUE,
       ),
     ),
@@ -31,6 +32,11 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
   $element = array();
   $settings = $display['settings'];
   $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'default';
+
+  // Don't display anything for an empty collection.
+  if (!empty($settings['hide_empty']) && empty($items)) {
+    return $element;
+  }
 
   switch ($display['type']) {
     case 'field_collection_table_view':
@@ -144,6 +150,12 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
   $element = field_collection_field_formatter_settings_form($field, $instance, $view_mode, $form, $form_state);
 
   if ($display['type'] == 'field_collection_table_view') {
+    $element['hide_empty'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide empty collection'),
+      '#default_value' => $settings['hide_empty'],
+      '#description' => t('If enabled, nothing will be displayed for an empty collection (not even the add link).'),
+    );
     $element['empty'] = array(
       '#type' => 'checkbox',
       '#title' => t('Hide empty columns'),
@@ -162,6 +174,8 @@ function field_collection_table_field_formatter_settings_summary($field, $instan
   $settings = $display['settings'];
   $output = field_collection_field_formatter_settings_summary($field, $instance, $view_mode);
   if ($display['type'] == 'field_collection_table_view') {
+    $output .= '<br>';
+    $output .= !empty($settings['hide_empty']) ? t('Empty collections: Hidden') : t('Empty collections: Shown');
     $output .= '<br>';
     $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
   }
