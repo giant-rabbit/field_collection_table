@@ -371,7 +371,10 @@ function field_collection_table_field_widget_info() {
     'field_collection_table' => array(
       'label' => t('Table'),
       'field types' => array('field_collection'),
-      'settings' => array('nodragging' => FALSE),
+      'settings' => array(
+        'nodragging' => FALSE,
+        'title_on_top' => TRUE,
+      ),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_DEFAULT,
         'default value' => FIELD_BEHAVIOR_NONE,
@@ -406,6 +409,12 @@ function field_collection_table_field_widget_settings_form($field, $instance) {
       '#title' => t('Disable drag and drop'),
       '#description' => t('If checked, users cannot rearrange the rows.'),
       '#default_value' => $settings['nodragging'],
+    );
+    $form['title_on_top'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Display title above table'),
+      '#description' => t('If checked, field title will appear above the table.'),
+      '#default_value' => $settings['title_on_top'],
     );
   }
 
