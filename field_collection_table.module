@@ -60,6 +60,30 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
           }
         }
       }
+
+      if (module_exists('ds')) {
+        // Add Display Suite fields and settings.
+        $fields_ds = ds_get_fields('field_collection_item');
+        $fields_ds_settings = ds_get_field_settings('field_collection_item', $field['field_name'], $view_mode);
+        foreach ($fields_ds_settings as $name => $ds_settings) {
+          if (isset($fields_ds[$name])) {
+            $weight = $ds_settings['weight'];
+            $field_names[$weight] = $name;
+            $header[$weight] = array(
+              'data' => ($ds_settings['label'] != 'hidden') ? $fields_ds[$name]['title'] : NULL,
+              'class' => $name,
+            );
+          }
+          if (in_array($name, $field_names)) {
+            $weight = array_search($name, $field_names);
+          }
+          // Allow to override field label using DS field format settings.
+          if (isset($weight) && isset($ds_settings['formatter_settings']['ft']['lb'])) {
+            $header[$weight]['data'] = t(check_plain($ds_settings['formatter_settings']['ft']['lb']));
+          }
+        }
+      }
+
       ksort($header);
       ksort($field_names);
 
