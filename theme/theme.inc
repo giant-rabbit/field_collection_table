@@ -254,22 +254,31 @@ function theme_table__field_collection_table($variables) {
  */
 function _field_collection_table_get_title($field) {
   $title = '';
+  $required = FALSE;
 
   if (isset($field['#language']) && isset($field[$field['#language']])) {
     $language = $field['#language'];
     if (isset($field[$language]['#title'])) {
       $title = $field[$language]['#title'];
+      $required = !empty($field[$language]['#required']);
+
     }
     elseif (isset($field[$language][0]['#title'])) {
       $title = $field[$language][0]['#title'];
+      $required = !empty($field[$language][0]['#required']);
     }
   }
   elseif (isset($field['#title'])) {
     $title = empty($field['#is_weight']) ? $field['#title'] : t('Order');
+    $required = !empty($field['#required']);
   }
   elseif (isset($field['#value'])) {
     $title = $field['#value'];
+    $required = !empty($field['#required']);
   }
-
-  return $title;
+  $required = $required ? theme('form_required_marker', array('element' => $field)) : '';
+  return t('!title !required', array(
+    '!title' => $title,
+    '!required' => $required,
+  ));
 }
