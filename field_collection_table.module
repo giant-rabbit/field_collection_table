@@ -127,6 +127,12 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
         '#theme' => 'table',
         '#header' => $header,
         '#rows' => $rows,
+        '#attributes' => array(
+          'class' => array(
+            'field-collection-table-view',
+            drupal_clean_css_identifier('view-mode-' . $view_mode),
+          ),
+        ),
       );
 
       if (!empty($settings['empty'])) {
