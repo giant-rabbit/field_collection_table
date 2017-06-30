@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Module implementing a field-collection table formatter.
@@ -20,6 +21,7 @@ function field_collection_table_field_formatter_info() {
         'view_mode' => 'full',
         'hide_empty' => FALSE,
         'empty' => TRUE,
+        'caption' => NULL,
       ),
     ),
   );
@@ -33,137 +35,125 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
   $settings = $display['settings'];
   $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'default';
 
-  // Don't display anything for an empty collection.
   if (!empty($settings['hide_empty']) && empty($items)) {
     return $element;
   }
 
-  switch ($display['type']) {
-    case 'field_collection_table_view':
-      $header = array();
-      $field_names = array();
-      foreach (field_info_instances('field_collection_item', $field['field_name']) as $field_collection_item) {
-        $item_view_mode = !empty($field_collection_item['display'][$view_mode]) ? $view_mode : 'default';
-        if ($field_collection_item['display'][$item_view_mode]['type'] != 'hidden') {
-          $weight = $field_collection_item['display'][$item_view_mode]['weight'];
-          $field_names[$weight] = $field_collection_item['field_name'];
+  $header = array();
+  $field_names = array();
+  foreach (field_info_instances('field_collection_item', $field['field_name']) as $field_collection_item) {
+    $item_view_mode = !empty($field_collection_item['display'][$view_mode]) ? $view_mode : 'default';
+    if ($field_collection_item['display'][$item_view_mode]['type'] != 'hidden') {
+      $weight = $field_collection_item['display'][$item_view_mode]['weight'];
+      $field_names[$weight] = $field_collection_item['field_name'];
 
-          if ($field_collection_item['display'][$item_view_mode]['label'] != 'hidden') {
-            $header[$weight] = array(
-              'data' => (
-              module_exists('i18n_field')) ? i18n_field_translate_property($field_collection_item, 'label') : $field_collection_item['label'],
-              'class' => $field_names[$weight],
-            );
-          }
-          else {
-            $header[$weight] = '';
-          }
-        }
-      }
-
-      if (module_exists('ds')) {
-        // Add Display Suite fields and settings.
-        $fields_ds = ds_get_fields('field_collection_item');
-        $fields_ds_settings = ds_get_field_settings('field_collection_item', $field['field_name'], $view_mode);
-        foreach ($fields_ds_settings as $name => $ds_settings) {
-          if (isset($fields_ds[$name])) {
-            $weight = $ds_settings['weight'];
-            $field_names[$weight] = $name;
-            $header[$weight] = array(
-              'data' => ($ds_settings['label'] != 'hidden') ? $fields_ds[$name]['title'] : NULL,
-              'class' => $name,
-            );
-          }
-          if (in_array($name, $field_names)) {
-            $weight = array_search($name, $field_names);
-          }
-          // Allow to override field label using DS field format settings.
-          if (isset($weight) && isset($ds_settings['formatter_settings']['ft']['lb'])) {
-            $header[$weight]['data'] = t(check_plain($ds_settings['formatter_settings']['ft']['lb']));
-          }
-        }
-      }
-
-      ksort($header);
-      ksort($field_names);
-
-      $rows = array();
-      foreach ($items as $delta => $item) {
-        $field_collection = field_collection_field_get_entity($item);
-        if (empty($field_collection)) {
-          continue;
-        }
-        $view = $field_collection->view($view_mode);
-        $content = $view['field_collection_item'][$field_collection->identifier()];
-        $column = array();
-        foreach ($field_names as $field_name) {
-          if (isset($content[$field_name])) {
-            $content[$field_name]['#label_display'] = 'hidden';
-          }
-          else {
-            $content[$field_name] = array(
-              '#markup' => '<span class="empty_field"></span>',
-              '#empty' => TRUE,
-            );
-          }
-          $column[] = array(
-            'data' => $content[$field_name],
-            'class' => drupal_html_class($field_name),
-          );
-        }
-
-        $links = array(
-          '#theme' => 'links',
-          '#theme_wrapper' => 'item_list',
-          '#attributes' => array('class' => array('field-collection-view-links')),
-        );
-
-        foreach (array('edit', 'delete') as $op) {
-          if (!empty($settings[$op]) && entity_access($op == 'edit' ? 'update' : $op, 'field_collection_item', $field_collection)) {
-            $links['#links'][$op] = array(
-              'title' => t($settings[$op]),
-              'href' => $field_collection->path() . '/' . $op,
-              'query' => drupal_get_destination(),
-            );
-            $header['operations'] = t('Operations');
-          }
-        }
-
-        if (!empty($links['#links'])) {
-          $column[] = array(
-            'data' => $links,
-            'class' => "field-operations",
-          );
-        }
-
-        $rows[] = array(
-          'data' => $column,
-          'class' => array('field-collection-item'),
+      if ($field_collection_item['display'][$item_view_mode]['label'] != 'hidden') {
+        $header[$weight] = array(
+          'data' => module_exists('i18n_field') ? i18n_field_translate_property($field_collection_item, 'label') : $field_collection_item['label'],
+          'class' => $field_names[$weight],
         );
       }
-
-      // Remove header if all labels are hidden.
-      if (!array_filter($header)) {
-        $header = array();
+      else {
+        $header[$weight] = '';
       }
+    }
+  }
 
-      $element[0] = array(
-        '#theme' => 'table',
-        '#header' => $header,
-        '#rows' => $rows,
-        '#attributes' => array(
-          'class' => array(
-            'field-collection-table-view',
-            drupal_clean_css_identifier('view-mode-' . $view_mode),
-          ),
-        ),
+  if (module_exists('ds')) {
+    $fields_ds = ds_get_fields('field_collection_item');
+    $fields_ds_settings = ds_get_field_settings('field_collection_item', $field['field_name'], $view_mode);
+    foreach ($fields_ds_settings as $name => $ds_settings) {
+      if (isset($fields_ds[$name])) {
+        $weight = $ds_settings['weight'];
+        $field_names[$weight] = $name;
+        $header[$weight] = array(
+          'data' => $ds_settings['label'] !== 'hidden' ? $fields_ds[$name]['title'] : NULL,
+          'class' => $name,
+        );
+      }
+      if (in_array($name, $field_names)) {
+        $weight = array_search($name, $field_names);
+      }
+      // Allow to override field label using DS field format settings.
+      if (isset($weight) && isset($ds_settings['formatter_settings']['ft']['lb'])) {
+        $header[$weight]['data'] = t(check_plain($ds_settings['formatter_settings']['ft']['lb']));
+      }
+    }
+  }
+
+  ksort($header);
+  ksort($field_names);
+
+  $rows = array();
+  foreach ($items as $delta => $item) {
+    $field_collection = field_collection_field_get_entity($item);
+    if (empty($field_collection)) {
+      continue;
+    }
+    $view = $field_collection->view($view_mode);
+    $content = $view['field_collection_item'][$field_collection->identifier()];
+    $column = array();
+    foreach ($field_names as $field_name) {
+      $content[$field_name]['#label_display'] = 'hidden';
+      $column[] = array(
+        'data' => $content[$field_name],
+        'class' => drupal_html_class($field_name),
       );
+    }
 
-      if (!empty($settings['empty'])) {
-        $element[0]['#theme'] = 'table__field_collection_table';
-        $element[0]['#settings']['empty'] = TRUE;
+    $links = array(
+      '#theme' => 'links',
+      '#theme_wrapper' => 'item_list',
+      '#attributes' => array('class' => array('field-collection-view-links')),
+    );
+
+    foreach (array('edit', 'delete') as $op) {
+      if (!(module_exists('field_permissions') && !user_access($op . ' ' . $field['field_name'])) &&
+        !empty($settings[$op]) && entity_access($op == 'edit' ? 'update' : $op, 'field_collection_item', $field_collection)
+      ) {
+        $links['#links'][$op] = array(
+          'title' => t($settings[$op]),
+          'href' => $field_collection->path() . '/' . $op,
+          'query' => drupal_get_destination(),
+        );
+        $header['operations'] = t('Operations');
       }
-      break;
+    }
+
+    if (!empty($links['#links'])) {
+      $column[] = array(
+        'data' => $links,
+        'class' => "field-operations",
+      );
+    }
+
+    $rows[] = array(
+      'data' => $column,
+      'class' => array('field-collection-item'),
+    );
+  }
+
+  // Remove header if all labels are hidden.
+  if (!array_filter($header)) {
+    $header = array();
+  }
+
+  $element[0] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#caption' => !empty($settings['caption']) ? t($settings['caption']) : NULL,
+    '#attributes' => array(
+      'class' => array(
+        'field-collection-table-view',
+        drupal_clean_css_identifier('view-mode-' . $view_mode),
+      ),
+    ),
+  );
+
+  if (!empty($settings['empty'])) {
+    $element[0]['#theme'] = 'table__field_collection_table';
+    $element[0]['#settings']['empty'] = TRUE;
   }
 
   field_collection_field_formatter_links($element, $entity_type, $entity, $field, $instance, $langcode, $items, $display);
@@ -178,21 +168,27 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
   $element = field_collection_field_formatter_settings_form($field, $instance, $view_mode, $form, $form_state);
-
-  if ($display['type'] == 'field_collection_table_view') {
-    $element['hide_empty'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide empty collection'),
-      '#default_value' => $settings['hide_empty'],
-      '#description' => t('If enabled, nothing will be displayed for an empty collection (not even the add link).'),
-    );
-    $element['empty'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide empty columns'),
-      '#description' => t('If checked, hide empty Field Collection table columns.'),
-      '#default_value' => $settings['empty'],
-    );
+  if (!empty($element['view_mode'])) {
+    $element['view_mode']['#description'] = t('The view mode is used to determine which fields should be displayed.');
   }
+  $element['hide_empty'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide empty collection'),
+    '#default_value' => $settings['hide_empty'],
+    '#description' => t('If enabled, nothing will be displayed for an empty collection (not even the add link).'),
+  );
+  $element['empty'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide empty columns'),
+    '#description' => t('If checked, hide empty Field Collection table columns.'),
+    '#default_value' => $settings['empty'],
+  );
+  $element['caption'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Table caption'),
+    '#description' => t('If entered, a caption above the table'),
+    '#default_value' => $settings['caption'],
+  );
   return $element;
 }
 
@@ -208,6 +204,7 @@ function field_collection_table_field_formatter_settings_summary($field, $instan
     $output .= !empty($settings['hide_empty']) ? t('Empty collections: Hidden') : t('Empty collections: Shown');
     $output .= '<br>';
     $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
+    $output .= !empty($settings['caption']) ? '<br>' . t('Caption: %caption', array('%caption' => t($settings['caption']))) : '';
   }
   return $output;
 }
@@ -223,7 +220,8 @@ function field_collection_table_theme($existing, $type, $theme, $path) {
   return array(
     'field_collection_table_multiple_value_field' => $base + array('render element' => 'element'),
     'field_collection_table_multiple_value_fields' => $base + array('render element' => 'element'),
-    'table__field_collection_table' => $base + array(
+    'table__field_collection_table' => $base +
+      array(
         'variables' => array(
           'header' => NULL,
           'rows' => NULL,
@@ -270,7 +268,6 @@ function field_collection_table_field_attach_form($entity_type, $entity, &$form,
   }
 
   // Individual field collection item edit.
-  //
   if ($entity_type == 'field_collection_item') {
     $instance = $entity->instanceInfo();
     if ($instance['widget']['type'] == 'field_collection_table') {
@@ -348,22 +345,6 @@ function field_collection_table_pre_render_multiple_fields($element) {
 }
 
 /**
- * Implements hook_entity_view().
- */
-function field_collection_table_entity_view($entity, $type, $view_mode, $langcode) {
-  if (get_class($entity) != 'FieldCollectionItemEntity') {
-    return;
-  }
-  if ($instance = $entity->instanceInfo()) {
-    $display = field_get_display($instance, $view_mode, $entity->hostEntity());
-    if ($display['type'] == 'field_collection_table_view') {
-      $entity->content['#theme'] = 'field_collection_table_multiple_value_field';
-      $entity->content['#pre_render'][] = 'field_collection_table_pre_render_field';
-    }
-  }
-}
-
-/**
  * Implements hook_field_widget_info().
  */
 function field_collection_table_field_widget_info() {
@@ -373,7 +354,7 @@ function field_collection_table_field_widget_info() {
       'field types' => array('field_collection'),
       'settings' => array(
         'nodragging' => FALSE,
-        'title_on_top' => TRUE,
+        'hide_title' => FALSE,
       ),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_DEFAULT,
@@ -387,12 +368,9 @@ function field_collection_table_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function field_collection_table_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  switch ($instance['widget']['type']) {
-    case 'field_collection_table':
-      $instance['widget']['type'] = 'field_collection_embed';
-      $element = field_collection_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
-      break;
-  }
+  // Changing this variable so we build the form from field_collection_embed.
+  $instance['widget']['type'] = 'field_collection_embed';
+  $element = field_collection_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
   return $element;
 }
 
@@ -402,21 +380,19 @@ function field_collection_table_field_widget_form(&$form, &$form_state, $field, 
 function field_collection_table_field_widget_settings_form($field, $instance) {
   $widget = $instance['widget'];
   $settings = $widget['settings'];
-
-  if ($widget['type'] == 'field_collection_table') {
-    $form['nodragging'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Disable drag and drop'),
-      '#description' => t('If checked, users cannot rearrange the rows.'),
-      '#default_value' => $settings['nodragging'],
-    );
-    $form['title_on_top'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Display title above table'),
-      '#description' => t('If checked, field title will appear above the table.'),
-      '#default_value' => $settings['title_on_top'],
-    );
-  }
-
+  $form['nodragging'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable drag and drop'),
+    '#description' => t('If checked, users cannot rearrange the rows.'),
+    '#default_value' => $settings['nodragging'],
+    '#weight' => 2,
+  );
+  $form['hide_title'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide title'),
+    '#description' => t('If checked, the field title will be hidden.'),
+    '#default_value' => $settings['hide_title'],
+    '#weight' => 3,
+  );
   return $form;
 }

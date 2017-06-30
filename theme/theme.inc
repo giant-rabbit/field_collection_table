@@ -11,12 +11,12 @@ function theme_field_collection_table_multiple_value_field($variables) {
   // Order field widgets by their widget weight.
   $instances = field_info_instances($element['#entity_type'], $element['#bundle']);
   uasort($instances, '_field_collection_table_sort_items_widget_helper');
-  foreach ($instances as $field_name => $instance) {
+  foreach (array_keys($instances) as $field_name) {
     if (empty($element[$field_name])) {
       continue;
     }
 
-    if (!isset($item[$field_name]['#access']) || $item[$field_name]['#access']) {
+    if (!isset($element[$field_name]['#access']) || $element[$field_name]['#access']) {
       $header[] = _field_collection_table_get_title($element[$field_name]);
       $cells[] = array('data' => $element[$field_name]);
     }
@@ -52,24 +52,15 @@ function _field_collection_table_sort_items_widget_helper($a, $b) {
  */
 function theme_field_collection_table_multiple_value_fields($variables) {
   $element = $variables['element'];
-  $output = '';
-
-  // Ensure default widget settings turn dragging off for field formatter
-  // without custom settings.
-  if (!isset($element['#custom_settings'])) {
-    $element['#custom_settings'] = array(
-      'nodragging' => TRUE,
-      'title_on_top' => TRUE,
-    );
+  if (!isset($element['#custom_settings']['hide_title'])) {
+    $element['#custom_settings']['hide_title'] = FALSE;
   }
-
+  if (!isset($element['#custom_settings']['nodragging'])) {
+    $element['#custom_settings']['nodragging'] = TRUE;
+  }
   if (isset($element['#cardinality']) && ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
     $table_id = drupal_html_id($element['#field_name'] . '_values');
     $order_class = $element['#field_name'] . '-delta-order';
-    $required = !empty($element['#required']) ? theme('form_required_marker', array('element' => $element)) : '';
-
-    $rows = array();
-
     // Sort items according to '_weight'.
     // Needed when the form comes back after preview or failed validation.
     $items = array();
@@ -84,38 +75,22 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       }
     }
 
-    // No need to sort if nodragging is selected.
+    $header = array();
+    $cells_default = array();
     if (!$element['#custom_settings']['nodragging']) {
       usort($items, '_field_sort_items_value_helper');
-
-      // Add header for table dragging.
-      $header = array(
-        array(
-          'data' => '',
-          'class' => 'tabledrag',
-        ),
-      );
+      $header = array(array('data' => '', 'class' => 'tabledrag'));
+      $cells_default = array(array('data' => '', 'class' => 'field-multiple-drag'));
     }
 
-    // Add the items as table rows.
+    $rows = array();
     foreach ($items as $key => $item) {
       uasort($item, 'element_sort');
       $item['_weight']['#attributes']['class'] = array($order_class);
-
-      $cells = array();
-
-      // Add classes for dragging if needed.
-      if (!$element['#custom_settings']['nodragging']) {
-        $cells = array(
-          array('data' => '', 'class' => 'field-multiple-drag'),
-        );
-      }
-
+      $cells = $cells_default;
       foreach (element_children($item) as $field_name) {
-        // Don't add the _weight.
         if (!$element['#custom_settings']['nodragging'] || $field_name != '_weight') {
           if (!isset($item[$field_name]['#access']) || $item[$field_name]['#access']) {
-            // Only add the header once.
             if ($key == 0) {
               $header[] = array(
                 'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
@@ -129,17 +104,11 @@ function theme_field_collection_table_multiple_value_fields($variables) {
           }
         }
       }
-      // Mark rows as draggable if needed.
       if (!$element['#custom_settings']['nodragging']) {
-        $rows[] = array(
-          'data' => $cells,
-          'class' => array('draggable'),
-        );
+        $rows[] = array('data' => $cells, 'class' => array('draggable'));
       }
       else {
-        $rows[] = array(
-          'data' => $cells,
-        );
+        $rows[] = array('data' => $cells);
       }
     }
 
@@ -148,12 +117,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       '#suffix' => '</div>',
     );
 
-    if ($element['#custom_settings']['title_on_top']) {
+    if (!$element['#custom_settings']['hide_title']) {
       $output['title'] = array(
         '#prefix' => "<label class='form-item-title'>",
         '#markup' => t('!title !required', array(
           '!title' => $element['#title'],
-          '!required' => $required,
+          '!required' => !empty($element['#required']) ? theme('form_required_marker', array('element' => $element)) : '',
         )),
         '#suffix' => '</label>',
       );
@@ -181,30 +150,25 @@ function theme_field_collection_table_multiple_value_fields($variables) {
     }
     if (isset($add_more_button)) {
       $add_more_button['#weight'] = 40;
-      $output[]
-        = $add_more_button + array(
-          '#prefix' => '<div class="clearfix">',
-          '#suffix' => '</div>',
-        );
+      $output[] = $add_more_button;
     }
-
-    $output = drupal_render($output);
-
-    // Add table drag.
     if (!$element['#custom_settings']['nodragging']) {
       drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
     }
+    $output = drupal_render($output);
   }
   else {
+    $output = '';
     foreach (element_children($element) as $key) {
       $output .= drupal_render($element[$key]);
     }
   }
+
   return $output;
 }
 
 /**
- * Implements template_preprocess_HOOK__PATTERN().
+ * Preprocess variables for a field collection table.
  */
 function template_preprocess_table__field_collection_table(&$variables) {
   if (empty($variables['settings'])) {
