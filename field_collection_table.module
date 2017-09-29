@@ -98,6 +98,7 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
       $column[] = array(
         'data' => $content[$field_name],
         'class' => drupal_html_class($field_name),
+        'data-title' => $content[$field_name]['#title'],
       );
     }
 
