@@ -231,7 +231,12 @@ function _field_collection_table_get_title($field) {
       $title = $field[$language][0]['#title'];
       $required = !empty($field[$language][0]['#required']);
     }
+    elseif (isset($field[$language]['#type']) && $field[$language]['#type'] == 'select_or_other') {
+      $title = $field[$language]['select']['#title'];
+      $required = !empty($field[$language]['select']['#required']);
+    }
   }
+
   elseif (isset($field['#title'])) {
     $title = empty($field['#is_weight']) ? $field['#title'] : t('Order');
     $required = !empty($field['#required']);
