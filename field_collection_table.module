@@ -22,6 +22,8 @@ function field_collection_table_field_formatter_info() {
         'hide_empty' => FALSE,
         'empty' => TRUE,
         'caption' => NULL,
+        'orientation' => 'columns',
+        'header_column' => 'none',
       ),
     ),
   );
@@ -33,12 +35,32 @@ function field_collection_table_field_formatter_info() {
 function field_collection_table_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
   $settings = $display['settings'];
-  $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'default';
-
   if (!empty($settings['hide_empty']) && empty($items)) {
     return $element;
   }
 
+  // Build column mode
+  if ($settings['orientation'] == 'columns') {
+    _field_collection_table_column_mode($element, $settings, $entity_type, $entity, $field, $instance, $langcode, $items, $display);
+  }
+
+  // Build row mode
+  if ($settings['orientation'] == 'rows') {
+    _field_collection_table_row_mode($element, $settings, $entity_type, $entity, $field, $instance, $langcode, $items, $display);
+  }
+
+
+
+  field_collection_field_formatter_links($element, $entity_type, $entity, $field, $instance, $langcode, $items, $display);
+
+  return $element;
+}
+
+/**
+ * Helper function to build the table in row mode
+ */
+function _field_collection_table_column_mode(&$element, $settings, $entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'default';
   $header = array();
   $field_names = array();
   foreach (field_info_instances('field_collection_item', $field['field_name']) as $field_collection_item) {
@@ -157,9 +179,115 @@ function field_collection_table_field_formatter_view($entity_type, $entity, $fie
     $element[0]['#settings']['empty'] = TRUE;
   }
 
-  field_collection_field_formatter_links($element, $entity_type, $entity, $field, $instance, $langcode, $items, $display);
-
   return $element;
+}
+
+/**
+ * Helper function to build the table in row mode
+ */
+function _field_collection_table_row_mode(&$element, $settings, $entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $field_names = array();
+  foreach (field_info_instances('field_collection_item', $field['field_name']) as $field_collection_item) {
+    $weight = $field_collection_item['display']['default']['weight'];
+    $field_names[$weight] = $field_collection_item['field_name'];
+  }
+
+  // Main sort
+  ksort($field_names);
+
+  $header = array();
+  if ($settings['header_column'] !== 'none') {
+    // First header cell will be always empty
+    $header = array(array('data' => FALSE));
+  }
+
+  $rows = array();
+  $labels = array();
+  foreach ($items as $delta => $item) {
+    $field_collection = field_collection_field_get_entity($item);
+    if (empty($field_collection)) {
+      continue;
+    }
+    $view = $field_collection->view();
+    $content = $view['field_collection_item'][$field_collection->identifier()];
+    foreach ($field_names as $field_name) {
+      if (isset($content[$field_name])) {
+        $content[$field_name]['#label_display'] = 'hidden';
+      }
+      else {
+        $content[$field_name] = array(
+          '#markup' => '<span class="empty_field"></span>',
+          '#empty' => TRUE,
+        );
+      }
+
+      // Record as header
+      if ($settings['header_column'] == $field_name) {
+        $header[] = array(
+          'data' => $content[$field_name],
+        );
+        continue;
+      }
+      // Record Title
+      $labels[$field_name] = $content[$field_name]['#title'];
+
+      // Record Column content
+      $rows[$field_name]['data'][$delta] = array(
+        'data' => $content[$field_name],
+        'class' => $field_name,
+      );
+
+      $rows[$field_name]['class'] = array('field_collection_item');
+
+      // Build Operational links
+      $links = array(
+        '#theme' => 'links',
+        '#theme_wrapper' => 'item_list',
+        '#attributes' => array(
+          'class' => array(
+            'field-collection-view-links',
+          ),
+        ),
+      );
+      foreach (array('edit', 'delete') as $op) {
+        if (!empty($settings[$op]) && field_collection_item_access($op == 'edit' ? 'update' : $op, $field_collection)) {
+          $links['#links'][$op] = array(
+            'title' => $settings[$op],
+            'href' => $field_collection->path() . '/' . $op,
+            'query' => drupal_get_destination(),
+          );
+        }
+      }
+
+      if (!empty($links['#links'])) {
+        $operations[$delta] = array(
+          'data' => $links,
+          'class' => "field_collection_item_operations",
+        );
+      }
+    }
+  }
+  // Inject the labels
+  foreach ($labels as $field_name => $data) {
+    array_unshift($rows[$field_name]['data'], $data);
+  }
+
+  // Inject operational links
+  if (!empty($operations)) {
+    array_unshift($operations, array('data' => t('Operations')));
+    $rows[] = array('data' => $operations);
+  }
+
+  $element[0] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+
+  if (!empty($settings['empty'])) {
+    $element[0]['#theme'] = 'table__field_collection_table';
+    $element[0]['#settings']['empty'] = TRUE;
+  }
 }
 
 /**
@@ -169,6 +297,15 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
   $element = field_collection_field_formatter_settings_form($field, $instance, $view_mode, $form, $form_state);
+
+  $field_collections = field_info_instances('field_collection_item', $instance['field_name']);
+  $field_options = array('none' => t('None'));
+  foreach ($field_collections as $key => $value) {
+    $field_options[$key] = $value['label'];
+  }
+
+
+
   if (!empty($element['view_mode'])) {
     $element['view_mode']['#description'] = t('The view mode is used to determine which fields should be displayed.');
   }
@@ -190,6 +327,25 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
     '#description' => t('If entered, a caption above the table'),
     '#default_value' => $settings['caption'],
   );
+  $element['orientation'] = array(
+    '#type' => 'select',
+    '#title' => t('Orientation'),
+    '#description' => t('Set the orientation of the table'),
+    '#options' => array(
+      'columns' => t('Columns'),
+      'rows' => t('Rows'),
+    ),
+    '#default_value' => $settings['orientation'],
+  );
+
+  $element['header_column'] = array(
+    '#type' => 'select',
+    '#title' => t('Header field'),
+    '#description' => t('The selected field value will be used as the horizontal table header'),
+    '#options' => $field_options,
+    '#states'=> array('visible' => array(':input[name="fields[field_fc][settings_edit_form][settings][orientation]"]' => array('value' => 'rows'))),
+  );
+
   return $element;
 }
 
@@ -206,6 +362,20 @@ function field_collection_table_field_formatter_settings_summary($field, $instan
     $output .= '<br>';
     $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
     $output .= !empty($settings['caption']) ? '<br>' . t('Caption: %caption', array('%caption' => t($settings['caption']))) : '';
+    $orientations = array('columns' => t('Column'), 'rows' => t('Row'));
+    $output .= '<br />';
+    $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
+    if (isset($settings['orientation'])) {
+      $output .= '<br />';
+      $output .= t('Format fields as <strong>!orientation</strong>.', array('!orientation' => $orientations[$settings['orientation']]));
+    }
+    if (isset($settings['orientation']) && $settings['orientation'] == 'rows') {
+      $output .= '<br />';
+      if (isset($settings['header_column']) && $settings['header_column'] !== 'none') {
+        $output .= '<br />';
+        $output .= t('Field @field value is used as the header', array('@field' => $settings['header_column']));
+      }
+    }
   }
   return $output;
 }
