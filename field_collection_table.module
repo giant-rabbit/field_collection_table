@@ -307,7 +307,7 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
 
 
   if (!empty($element['view_mode'])) {
-    $element['view_mode']['#description'] = t('The view mode is used to determine which fields should be displayed.');
+    $element['view_mode']['#description'] = t('Used to determine which fields should be displayed.');
   }
   $element['hide_empty'] = array(
     '#type' => 'checkbox',
@@ -318,13 +318,13 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
   $element['empty'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide empty columns'),
-    '#description' => t('If checked, hide empty Field Collection table columns.'),
+    '#description' => t('If checked, hides empty table columns.'),
     '#default_value' => $settings['empty'],
   );
   $element['caption'] = array(
     '#type' => 'textfield',
     '#title' => t('Table caption'),
-    '#description' => t('If entered, a caption above the table'),
+    '#description' => t('Displayed in the caption element above the table'),
     '#default_value' => $settings['caption'],
   );
   $element['orientation'] = array(
