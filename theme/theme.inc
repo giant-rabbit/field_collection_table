@@ -94,7 +94,7 @@ function theme_field_collection_table_multiple_value_fields($variables) {
             if ($key == 0) {
               $header[] = array(
                 'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
-                'class' => array('field-label'),
+                'class' => array('field-label', drupal_html_class($field_name)),
               );
             }
             $cells[] = array(
