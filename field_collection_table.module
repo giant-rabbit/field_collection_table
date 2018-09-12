@@ -458,40 +458,20 @@ function field_collection_table_pre_render_field($element) {
       if (empty($element[$field_name])) {
         continue;
       }
-
       $field = &$element[$field_name];
-      $field_info = field_info_field($field_name);
       $language = $field['#language'];
       if (isset($field[$language])) {
         // Set the most common places for a title to display invisible.
         $field['#title_display'] = 'invisible';
         $field[$language]['#title_display'] = 'invisible';
-        foreach (element_children($field[$language]) as $child) {
-          if (array_key_exists('#type', $field[$language][$child]) &&
-            !in_array($field[$language][$child]['#type'], array(
-              'radio',
-              'checkbox',
-            ))
-          ) {
-            $field[$language][$child]['#title_display'] = 'invisible';
-          }
-          // Check the individual columns. Most commonly 'value'.
-          foreach ($field_info['columns'] as $column => $column_info) {
-            // Ensure column exist in form to prevent displaying empty
-            // table columns.
-            if (isset($field[$language][$child][$column])) {
-              $field[$language][$child][$column]['#title_display'] = 'invisible';
+        $children = element_children($field[$language]);
+        if ($children) {
+          foreach ($children as $child) {
+            if (array_key_exists('#type', $field[$language][$child]) &&
+              !in_array($field[$language][$child]['#type'], ['radio', 'checkbox'])) {
+              $field[$language][$child]['#title_display'] = 'invisible';
             }
-            // Date module sometimes adds its own random titles inside value.
-            if (in_array($field_info['type'], array(
-              'date',
-              'datestamp',
-              'datetime',
-            ))) {
-              foreach (element_children($field[$language][$child][$column]) as $date_child) {
-                $field[$language][$child][$column][$date_child]['#title_display'] = 'invisible';
-              }
-            }
+            $field[$language][$child]['value']['#title_display'] = 'invisible';
           }
         }
       }
