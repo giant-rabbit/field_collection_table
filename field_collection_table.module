@@ -426,6 +426,7 @@ function field_collection_table_field_attach_form($entity_type, $entity, &$form,
       && empty($form_state['programmed'])
       && field_access('edit', $field, $entity_type)
       && $instance['widget']['type'] == 'field_collection_table'
+      && isset($form[$field_name])
     ) {
 
       $element_langcode = $form[$field_name]['#language'];
