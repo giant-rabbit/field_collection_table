@@ -33,7 +33,7 @@ function theme_field_collection_table_multiple_value_field($variables) {
   );
 
   $element['#sorted'] = FALSE;
-  return drupal_render_children($element);
+  return backdrop_render_children($element);
 }
 
 /**
@@ -59,7 +59,7 @@ function theme_field_collection_table_multiple_value_fields($variables) {
     $element['#custom_settings']['nodragging'] = TRUE;
   }
   if (isset($element['#cardinality']) && ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
-    $table_id = drupal_html_id($element['#field_name'] . '_values');
+    $table_id = backdrop_html_id($element['#field_name'] . '_values');
     $order_class = $element['#field_name'] . '-delta-order';
     // Sort items according to '_weight'.
     // Needed when the form comes back after preview or failed validation.
@@ -94,12 +94,12 @@ function theme_field_collection_table_multiple_value_fields($variables) {
             if ($key == 0) {
               $header[] = array(
                 'data' => '<label>' . t('!title', array('!title' => _field_collection_table_get_title($item[$field_name]))) . '</label>',
-                'class' => array('field-label', drupal_html_class($field_name)),
+                'class' => array('field-label', backdrop_html_class($field_name)),
               );
             }
             $cells[] = array(
               'data' => $item[$field_name],
-              'class' => drupal_html_class($field_name),
+              'class' => backdrop_html_class($field_name),
             );
           }
         }
@@ -122,7 +122,7 @@ function theme_field_collection_table_multiple_value_fields($variables) {
         '#prefix' => "<label class='form-item-title'>",
         '#markup' => t('!title !required', array(
           '!title' => $element['#title'],
-          '!required' => !empty($element['#required']) ? theme('form_required_marker', array('element' => $element)) : '',
+          '!required' => !empty($element['#required'])?theme('form_required_marker', array('element' => $element)) : '',
         )),
         '#suffix' => '</label>',
       );
@@ -153,14 +153,14 @@ function theme_field_collection_table_multiple_value_fields($variables) {
       $output[] = $add_more_button;
     }
     if (!$element['#custom_settings']['nodragging']) {
-      drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+      backdrop_add_tabledrag($table_id, 'order', 'sibling', $order_class);
     }
-    $output = drupal_render($output);
+    $output = backdrop_render($output);
   }
   else {
     $output = '';
     foreach (element_children($element) as $key) {
-      $output .= drupal_render($element[$key]);
+      $output .= backdrop_render($element[$key]);
     }
   }
 
@@ -245,7 +245,7 @@ function _field_collection_table_get_title($field) {
     $title = $field['#value'];
     $required = !empty($field['#required']);
   }
-  $required = $required ? theme('form_required_marker', array('element' => $field)) : '';
+  $required = $required?theme('form_required_marker', array('element' => $field)) : '';
   return t('!title !required', array(
     '!title' => $title,
     '!required' => $required,

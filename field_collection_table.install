@@ -9,25 +9,9 @@
  * Implements hook_uninstall().
  */
 function field_collection_table_uninstall() {
-  variable_del('field_collection_table_format_form');
-  variable_del('field_collection_table_hide_empty');
+  config_clear('field_collection_table.settings', 'field_collection_table_format_form');
+  config_clear('field_collection_table.settings', 'field_collection_table_hide_empty');
 }
 
-/**
- * Updates FCT Field Instances with new formatter settings.
- */
-function field_collection_table_update_7001() {
-  foreach (field_info_instances() as $entity_type => $entity) {
-    foreach ($entity as $entity_name => $info) {
-      foreach ($info as $field_name => $instance) {
-        if (!empty($instance['widget']['type']) && $instance['widget']['type'] == 'field_collection_table') {
-          if (isset($instance['widget']['settings']['title_on_top'])) {
-            $instance['widget']['settings']['hide_title'] = !$instance['widget']['settings']['title_on_top'];
-            unset($instance['widget']['settings']['title_on_top']);
-          }
-          field_update_instance($instance);
-        }
-      }
-    }
-  }
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function field_collection_table_update_7001() { }

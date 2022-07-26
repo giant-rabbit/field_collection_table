@@ -67,8 +67,8 @@ function _field_collection_table_column_mode(&$element, $settings, $entity_type,
 
       if ($field_collection_item['display'][$item_view_mode]['label'] !== 'hidden') {
         $header[$weight] = array(
-          'data' => module_exists('i18n_field') ? i18n_field_translate_property($field_collection_item, 'label') : $field_collection_item['label'],
-          'class' => drupal_html_class($field_names[$weight]),
+          'data' => module_exists('i18n_field')?i18n_field_translate_property($field_collection_item, 'label') : $field_collection_item['label'],
+          'class' => backdrop_html_class($field_names[$weight]),
         );
       }
       else {
@@ -86,7 +86,7 @@ function _field_collection_table_column_mode(&$element, $settings, $entity_type,
         $field_names[$weight] = $name;
         $header[$weight] = array(
           'data' => $ds_settings['label'] !== 'hidden' ? $fields_ds[$name]['title'] : NULL,
-          'class' => drupal_html_class($name),
+          'class' => backdrop_html_class($name),
         );
       }
       elseif (in_array($name, $field_names)) {
@@ -113,7 +113,7 @@ function _field_collection_table_column_mode(&$element, $settings, $entity_type,
     $column = array();
     foreach ($field_names as $field_name) {
       $cell = array(
-        'class' => drupal_html_class($field_name),
+        'class' => backdrop_html_class($field_name),
         'data' => array(),
       );
       if (empty($contents[$field_name])) {
@@ -137,12 +137,12 @@ function _field_collection_table_column_mode(&$element, $settings, $entity_type,
 
     foreach (array('edit', 'delete') as $op) {
       if (!empty($settings[$op]) && !(module_exists('field_permissions') && !user_access($op . ' ' . $field['field_name']))
-         && entity_access($op === 'edit' ? 'update' : $op, 'field_collection_item', $field_collection)
+          && entity_access($op === 'edit' ? 'update' : $op, 'field_collection_item', $field_collection)
       ) {
         $links['#links'][$op] = array(
           'title' => t($settings[$op]),
           'href' => $field_collection->path() . '/' . $op,
-          'query' => drupal_get_destination(),
+          'query' => backdrop_get_destination(),
         );
         $header['operations'] = t('Operations');
       }
@@ -170,11 +170,11 @@ function _field_collection_table_column_mode(&$element, $settings, $entity_type,
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#caption' => !empty($settings['caption']) ? t($settings['caption']) : NULL,
+    '#caption' => !empty($settings['caption'])?t($settings['caption']) : NULL,
     '#attributes' => array(
       'class' => array(
         'field-collection-table-view',
-        drupal_clean_css_identifier('view-mode-' . $view_mode),
+        backdrop_clean_css_identifier('view-mode-' . $view_mode),
       ),
     ),
   );
@@ -199,7 +199,7 @@ function _field_collection_table_row_mode(&$element, $settings, $entity_type, $e
     if ($field_collection_item['display'][$item_view_mode]['type'] !== 'hidden') {
       $weight = $field_collection_item['display'][$item_view_mode]['weight'];
       $field_names[$weight] = $field_collection_item['field_name'];
-      $labels[$field_collection_item['field_name']] = module_exists('i18n_field') ? i18n_field_translate_property($field_collection_item, 'label') : $field_collection_item['label'];
+      $labels[$field_collection_item['field_name']] = module_exists('i18n_field')?i18n_field_translate_property($field_collection_item, 'label') : $field_collection_item['label'];
     }
   }
   if (module_exists('ds')) {
@@ -254,7 +254,7 @@ function _field_collection_table_row_mode(&$element, $settings, $entity_type, $e
         'data' => $content[$field_name],
       );
 
-      $rows[$field_name]['class'] = array(drupal_html_class($field_name));
+      $rows[$field_name]['class'] = array(backdrop_html_class($field_name));
 
       $links = array(
         '#theme' => 'links',
@@ -270,7 +270,7 @@ function _field_collection_table_row_mode(&$element, $settings, $entity_type, $e
           $links['#links'][$op] = array(
             'title' => $settings[$op],
             'href' => $field_collection->path() . '/' . $op,
-            'query' => drupal_get_destination(),
+            'query' => backdrop_get_destination(),
           );
         }
       }
@@ -297,11 +297,11 @@ function _field_collection_table_row_mode(&$element, $settings, $entity_type, $e
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#caption' => !empty($settings['caption']) ? t($settings['caption']) : NULL,
+    '#caption' => !empty($settings['caption'])?t($settings['caption']) : NULL,
     '#attributes' => array(
       'class' => array(
         'field-collection-table-view',
-        drupal_clean_css_identifier('view-mode-' . $view_mode),
+        backdrop_clean_css_identifier('view-mode-' . $view_mode),
       ),
     ),
   );
@@ -365,7 +365,7 @@ function field_collection_table_field_formatter_settings_form($field, $instance,
     '#title' => t('Header field'),
     '#description' => t('The selected field value will be used as the horizontal table header'),
     '#options' => $field_options,
-    '#states'=> array('visible' => array(':input[name="fields[field_fc][settings_edit_form][settings][orientation]"]' => array('value' => 'rows'))),
+    '#states' => array('visible' => array(':input[name="fields[field_fc][settings_edit_form][settings][orientation]"]' => array('value' => 'rows'))),
   );
 
   return $element;
@@ -380,13 +380,13 @@ function field_collection_table_field_formatter_settings_summary($field, $instan
   $output = field_collection_field_formatter_settings_summary($field, $instance, $view_mode);
   if ($display['type'] === 'field_collection_table_view') {
     $output .= '<br>';
-    $output .= !empty($settings['hide_empty']) ? t('Empty collections: Hidden') : t('Empty collections: Shown');
+    $output .= !empty($settings['hide_empty'])?t('Empty collections: Hidden') : t('Empty collections: Shown');
     $output .= '<br>';
-    $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
+    $output .= !empty($settings['empty'])?t('Empty columns: Hidden') : t('Empty columns: Shown');
     $output .= !empty($settings['caption']) ? '<br>' . t('Caption: %caption', array('%caption' => t($settings['caption']))) : '';
     $orientations = array('columns' => t('Column'), 'rows' => t('Row'));
     $output .= '<br />';
-    $output .= !empty($settings['empty']) ? t('Empty columns: Hidden') : t('Empty columns: Shown');
+    $output .= !empty($settings['empty'])?t('Empty columns: Hidden') : t('Empty columns: Shown');
     if (isset($settings['orientation'])) {
       $output .= '<br />';
       $output .= t('Format fields as <strong>!orientation</strong>.', array('!orientation' => $orientations[$settings['orientation']]));
@@ -444,11 +444,11 @@ function field_collection_table_field_attach_form($entity_type, $entity, &$form,
     }
     $field = field_info_field($field_name);
     if ($field['type'] === 'field_collection'
-      && isset($form[$field_name])
-      && $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED
-      && empty($form_state['programmed'])
-      && $instance['widget']['type'] === 'field_collection_table'
-      && field_access('edit', $field, $entity_type)
+       && isset($form[$field_name])
+       && $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED
+       && empty($form_state['programmed'])
+       && $instance['widget']['type'] === 'field_collection_table'
+       && field_access('edit', $field, $entity_type)
     ) {
 
       $element_langcode = $form[$field_name]['#language'];
