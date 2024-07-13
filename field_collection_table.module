@@ -116,13 +116,14 @@ function _field_collection_table_column_mode(&$element, $settings, $entity_type,
         'class' => backdrop_html_class($field_name),
         'data' => array(),
       );
-      if (empty($contents[$field_name])) {
+      if (empty($content[$field_name])) {
         $cell['data'] = array(
           '#markup' => '<span class="empty-field"></span>',
           '#empty' => TRUE,
         );
       }
       else {
+        $content[$field_name]['#label_display'] = 'hidden';
         $cell['data'] = $content[$field_name];
         $cell['data-title'] = $content[$field_name]['#title'];
       }
